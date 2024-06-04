@@ -6,9 +6,19 @@ public class WorldMap : MonoBehaviour
 
     [SerializeField]
     private PlaneMove _planePrefab; //飛行機プレハブ
+    [SerializeField]
+    private AudioClip _bgm; //BGM
+    [SerializeField]
+    private TextScroll _textScroll;
 
     private async void Start()
     {
+        //BGM再生
+        SoundManager.Instance.PlayBGM(_bgm);
+
+        //目的地テキストをスクロール
+        _textScroll.Initialize();
+
         var gameManager = GameManager.Instance;
         var destinationData = gameManager.DestinationData;
         var sceneData = gameManager.SceneData;

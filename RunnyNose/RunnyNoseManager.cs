@@ -34,27 +34,47 @@ public class RunnyNoseManager : MonoBehaviour
         return _winning;
     }
 
+    private bool _isStart = false; //一斉スタート用の変数
+    public void SetIsStart(bool value)
+    {
+        _isStart = value;
+    }
+
+    private bool _timerOn = false; //タイマーを1回だけ起動させるため
+
     // Start is called before the first frame update
     void Start()
     {
-        GameStart();
+        if (_isStart)
+        {
 
+        }
+        GameStart(); //ゲームを始める処理
+
+        //各クラスを参照
         _groundingChecker = _gravityCenter.GetComponent<GroundingChecker>();
         _gravityCenterMove = _gravityCenter.GetComponent<GravityCenterMove>();
-
         _imageSwitching = _audience.GetComponent<ImageSwitching>();
 
+        //勝利時の処理、時間計測の処理、を取得
         _winAction += Win;
-
         _gameTimer = GameManager.Instance.GameTimer;
-        _gameTimer.TimerMethod(10.0f, _winAction, _inGameTimerText);
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (_isStart && !_timerOn)
+        {
+            //タイマーが作動した状態に移行、下記の処理を1回だけ行う
+            _timerOn = true;
+
+            //10秒耐えたら勝利時の処理を実行
+            _gameTimer.TimerMethod(10.0f, _winAction, _inGameTimerText);
+        }
+
         //鼻水が地面に着く
-        if(_groundingChecker.GetGrounding() == true)
+        if (_groundingChecker.GetGrounding() == true)
         {
             Lose();
         }
@@ -72,7 +92,7 @@ public class RunnyNoseManager : MonoBehaviour
     private void GameStart()
     {
         Debug.Log("ゲーム開始！");
-        _resultView.Initialize(); //リザルト画面の初期化
+        _resultView.Initialize();
         //リザルト後にワールドマップに戻る処理設定
         GameManager.Instance.SetNextScene();
         _resultView.OnClickReturnMainButton.Subscribe(_ => GameManager.Instance.SceneData.BackToWorldMap());
@@ -88,7 +108,9 @@ public class RunnyNoseManager : MonoBehaviour
             Debug.Log("勝ち！");
 
             _winning = true;
-            _resultView.Open(true);
+            _resultView.OpenAsync(true);
+
+            GameManager.Instance.GameTimer.Dispose();
         }       
     }
 
@@ -101,8 +123,13 @@ public class RunnyNoseManager : MonoBehaviour
         {
             Debug.Log("負け！");
 
+            _imageSwitching.SetAngryFace();
+
             _losing = true;
-            _resultView.Open(false);
+
+            _resultView.OpenAsync(false);
+
+            GameManager.Instance.GameTimer.Dispose();
         }
     }
 }

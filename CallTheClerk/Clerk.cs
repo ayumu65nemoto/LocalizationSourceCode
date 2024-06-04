@@ -18,6 +18,7 @@ public class Clerk : MonoBehaviour
     private float _animationTime = 2.0f;    //アニメーション時間
     private float _feintProbability = 0.5f; //フェイントの確率
     private float _stopTiming = 2f; //店員が止まるタイミングの最大値
+    private SoundManager _soundManager; //SoundManager
 
     [SerializeField]
     private SpriteRenderer _renderer;   //店員のSpriteRenderer
@@ -31,6 +32,12 @@ public class Clerk : MonoBehaviour
     private GameObject _noticeMark; //気づきマーク
     [SerializeField]
     private GameObject _angerMark;  //怒りマーク
+    [SerializeField]
+    private AudioClip _walkSE;  //店員が歩くSE
+    [SerializeField]
+    private AudioClip _noticeSE;    //こちらに気づいたSE
+    [SerializeField]
+    private AudioClip _angerSE; //怒りのSE
 
     public bool IsFront { get; private set; } = false; //店員が正面を向いているか
     public ReactiveProperty<bool> ResultSubject { get; private set; } = new ReactiveProperty<bool>();
@@ -42,7 +49,10 @@ public class Clerk : MonoBehaviour
         var clerkSize = GetComponent<SpriteRenderer>().bounds.size.x;
         _rightBorder = Camera.main.ViewportToWorldPoint(Vector2.one).x - clerkSize;
         _leftBorder = Camera.main.ViewportToWorldPoint(Vector2.zero).x + clerkSize;
-        
+        _soundManager = SoundManager.Instance;
+        //SE再生
+        _soundManager.PlaySE(_walkSE, true);
+
         //オブジェクトの移動を管理するObservable
         _clerkMoveSubscription = Observable.EveryUpdate()
             .Where(_ => !_isPaused) //停止中は処理を行わない
@@ -82,6 +92,9 @@ public class Clerk : MonoBehaviour
         _pauseSubscription = Observable.Interval(TimeSpan.FromSeconds(UnityEngine.Random.Range(1f, _stopTiming)))
             .Subscribe(_ =>
             {
+                //SE再生停止
+                _soundManager.StopSE();
+
                 //こちらを向く前兆
                 _isPaused = true;
                 _renderer.sprite = _preFront;
@@ -105,6 +118,8 @@ public class Clerk : MonoBehaviour
                                 IsFront = false;
                                 _renderer.sprite = _yoko;
                                 RandomPauseClerk(); // 再帰的に呼び出す
+                                //SE再生
+                                _soundManager.PlaySE(_walkSE, true);
                             });
 
                             _pauseSubscription?.Dispose(); // 前のタイマーを破棄
@@ -119,6 +134,8 @@ public class Clerk : MonoBehaviour
                             IsFront = false;
                             _renderer.sprite = _yoko;
                             RandomPauseClerk(); // 再帰的に呼び出す
+                            //SE再生
+                            _soundManager.PlaySE(_walkSE, true);
                         }
                     });
                 
@@ -141,6 +158,9 @@ public class Clerk : MonoBehaviour
         //ゲームに成功したとき
         if (success)
         {
+            //SE再生
+            _soundManager.PlaySE(_noticeSE, false);
+            //気づきマークのアニメーション
             _noticeMark.SetActive(true);
             _noticeMark.transform
                 .DOPunchScale
@@ -153,6 +173,7 @@ public class Clerk : MonoBehaviour
         //ゲームに失敗したとき
         else
         {
+            _soundManager.PlaySE(_angerSE, false);
             _angerMark.SetActive(true);
             _angerMark.transform
                 .DOPunchScale

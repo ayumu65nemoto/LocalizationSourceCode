@@ -12,6 +12,7 @@ public class SceneData
 		WorldMap = 1,	//ワールドマップ
 		CallTheClerk = 2,   //店員を呼べ
 		RunnyNose = 3,	//鼻水ゲーム
+		Picture = 4,	//写真ゲーム
 	}
 	public SceneType CurrentSceneType { get; private set; } //現在のシーンタイプ
 	public SceneType NextSceneType { get; private set; }	//次のシーンタイプ
@@ -27,7 +28,8 @@ public class SceneData
 			[SceneType.Start] = "Start",
 			[SceneType.WorldMap] = "WorldMap",
 			[SceneType.CallTheClerk] = "CallTheClerk",
-			[SceneType.RunnyNose] = "RunnyNose"
+			[SceneType.RunnyNose] = "RunnyNose",
+			[SceneType.Picture] = "Picture",
 		};
 
 		//初期値設定
@@ -68,7 +70,7 @@ public class SceneData
 		}
         else
         {
-			NextSceneType = SceneType.WorldMap;
+			NextSceneType = SceneType.Start;
         }
 	}
 

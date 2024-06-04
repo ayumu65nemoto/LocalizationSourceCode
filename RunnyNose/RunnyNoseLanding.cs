@@ -13,7 +13,7 @@ public class RunnyNoseLanding : MonoBehaviour
     private Vector3 _firstGravityCenterPosition; //最初の重心の位置
     private Vector3 _currentGravityCenterPosition; //現在の重心の位置
 
-    [SerializeField] GameObject _gameManager; //ゲームマネージャー
+    [SerializeField] GameObject _runnyNoseManagerObj; //ゲームマネージャー
     private RunnyNoseManager _runnyNoseManager; //クラス
 
     // Start is called before the first frame update
@@ -23,7 +23,7 @@ public class RunnyNoseLanding : MonoBehaviour
 
         _firstGravityCenterPosition = _runnyNoseGravityCenter.transform.position; //最初の重心の位置を保存
 
-        _runnyNoseManager = _gameManager.GetComponent<RunnyNoseManager>(); //ゲームマネージャーのクラスを参照
+        _runnyNoseManager = _runnyNoseManagerObj.GetComponent<RunnyNoseManager>(); //ゲームマネージャーのクラスを参照
     }
 
     // Update is called once per frame
@@ -42,7 +42,6 @@ public class RunnyNoseLanding : MonoBehaviour
             _runnyNoseImg.transform.localScale = new Vector3(_imageScale.x, 0.4f, _imageScale.z);
 
             transform.DORotate(new Vector3(0, 0, 360), 2, RotateMode.WorldAxisAdd);
-
         }
         else
         {

@@ -13,6 +13,8 @@ public class CallClerk : MonoBehaviour
     private GameObject _riseArm;    //腕を上げる画像
     [SerializeField]
     private GameObject _speak;  //吹き出し
+    [SerializeField]
+    private AudioClip _callSE;  //店員を呼ぶSE
 
     /// <summary>
     /// 初期化処理
@@ -39,6 +41,7 @@ public class CallClerk : MonoBehaviour
     /// </summary>
     public async UniTask Speak()
     {
+        SoundManager.Instance.PlaySE(_callSE, false);
         _speak.SetActive(true);
         Tween tween = _speak.transform.DOScale(_imageSize, 1.0f);
         // アニメーションの完了を待機

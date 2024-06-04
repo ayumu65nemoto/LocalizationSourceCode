@@ -15,10 +15,8 @@ public class ImageSwitching : MonoBehaviour
 
     private SpriteRenderer _currentImage;
 
-    private float _switchingSpan = 3.0f; //振り向くスパン、現状3.0で固定
+    private float _switchingSpan = 5.0f; //振り向くスパン、現状3.0で固定
     private float _currentTime = 0f; //タイマー
-
-    private int _status = 1; //0=こっちを見てる、1=後ろを見てる、2=びっくり顔
 
     private bool _isLooking; //こっちを見ているかどうか
     public bool GetLooking()
@@ -30,32 +28,60 @@ public class ImageSwitching : MonoBehaviour
         _isLooking = value;
     }
 
+    private bool _isStart = false; //一斉スタート用の変数
+    public void SetIsStart(bool value)
+    {
+        _isStart = value;
+    }
+
+    Coroutine _someCoroutine; //コルーチン停止用の箱
+
+    private SoundManager _soundManager;
+
+    [SerializeField]
+    private AudioClip _noticeSE;    //鼻をすするSE
+
+    [SerializeField]
+    private AudioClip _angrySE;    //鼻をすするSE
+
     void Start()
     {
         //SpriteRendererコンポーネントを取得
         _currentImage = GetComponent<SpriteRenderer>();
+        //最初は後ろを向かせる
+        _currentImage.sprite = _uragawaSprite;
 
         //こっちを見ていない
         SetLooking(false);
+
+        _soundManager = SoundManager.Instance;
     }
 
     void Update()
     {
+        if (_isStart)
+        {
+            TurnAroundPerTime();
+        }
+    }
+
+    private void TurnAroundPerTime()
+    {
         //後ろを向いている時
-        if(_status == 1)
+        if (!_isLooking)
         {
             //タイマー起動
             _currentTime += Time.deltaTime;
-        }      
 
-        //_switchingSpanを満たしたら　且つ　後ろを向いている時
-        if (_currentTime > _switchingSpan && _status == 1)
-        {
-            //前を向かせる
-            StartCoroutine("FaceForward");
+            //_switchingSpanを満たしたら
+            if (_currentTime > _switchingSpan)
+            {
+                //前を向かせる
+                _someCoroutine = StartCoroutine(FaceForward());
 
-            //タイマーリセット
-            _currentTime = 0f;
+                //タイマーリセット
+                _currentTime = 0f;
+            }
         }
     }
 
@@ -65,31 +91,21 @@ public class ImageSwitching : MonoBehaviour
     /// <returns></returns>
     IEnumerator FaceForward()
     {
+        //こっちに気づくSE
+        _soundManager.PlaySE(_noticeSE, false);
+
         //画像切り替え
         _currentImage.sprite = _nanameSprite;
 
         //
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(0.2f);
 
         //画像切り替え
         _currentImage.sprite = _syoumenSprite;
 
-        //前を向いている状態
-        _status = 0;
-
         //こっちを見ている
         SetLooking(true);
 
-        //後ろを向かせる
-        StartCoroutine("BackToBackward");
-    }
-
-    /// <summary>
-    /// 後ろを向く
-    /// </summary>
-    /// <returns></returns>
-    IEnumerator BackToBackward()
-    {
         // 秒停止
         yield return new WaitForSeconds(0.5f);
 
@@ -101,10 +117,28 @@ public class ImageSwitching : MonoBehaviour
 
         yield return new WaitForSeconds(0.2f);
 
-        //画像切り替え
-        _currentImage.sprite = _uragawaSprite;
+        if (_isStart)
+        {
+            //画像切り替え
+            _currentImage.sprite = _uragawaSprite;
+        }
+        else if (!_isStart)
+        {
+            _currentImage.sprite = _bikkuriSprite; //怒りのオンニスプライト
+        }
+    }
 
-        //後ろを向いている状態
-        _status = 1;
+    /// <summary>
+    /// ゲーム失敗時に呼ばれる、観客の怒り演出処理
+    /// </summary>
+    public void SetAngryFace()
+    {
+        _isStart = false; //振り向くまでの時間計測を停止
+
+        //StopCoroutine(_someCoroutine); //振り向きを停止
+
+        _soundManager.PlaySE(_angrySE, false); //高森の怒り音声
+
+        _currentImage.sprite = _bikkuriSprite; //怒りのオンニスプライト
     }
 }

@@ -5,8 +5,8 @@ using UnityEngine;
 
 public class BoyFaceSwitching : MonoBehaviour
 {
-    [SerializeField] Sprite _nomalFace; //正面の顔画像
-    [SerializeField] Sprite _blowFace; //ななめの顔画像
+    [SerializeField] Sprite _nomalFace; //通常時の顔画像
+    [SerializeField] Sprite _blowFace; //鼻水をすする時の顔画像
 
     [SerializeField] Sprite _winFace; //勝利時の顔画像
     [SerializeField] Sprite _loseFace; //敗北時の顔画像
@@ -16,34 +16,43 @@ public class BoyFaceSwitching : MonoBehaviour
     [SerializeField] GameObject _runnyNoseGravityCenter; //鼻水の重心
     private GravityCenterMove _gravityCenterMove; //クラス
 
-    [SerializeField] GameObject _gameManager; //ゲームマネージャー
+    [SerializeField] GameObject _runnyNoseManagerObj; //ゲームマネージャー
     private RunnyNoseManager _runnyNoseManager; //クラス
+
+    private bool _isStart = false; //一斉スタート用の変数
+    public void SetIsStart(bool value)
+    {
+        _isStart = value;
+    }
 
     // Start is called before the first frame update
     void Start()
     {
-        // SpriteRendererコンポーネントを取得
-        _currentSprite = GetComponent<SpriteRenderer>();
-
-        _gravityCenterMove = _runnyNoseGravityCenter.GetComponent<GravityCenterMove>(); //重心のクラスを参照
-
-        _runnyNoseManager = _gameManager.GetComponent<RunnyNoseManager>(); //ゲームマネージャーのクラスを参照
+        //SpriteRendererコンポーネントを取得
+        _currentSprite = transform.GetComponent<SpriteRenderer>();
+        //重心のクラスを参照
+        _gravityCenterMove = _runnyNoseGravityCenter.GetComponent<GravityCenterMove>();
+        //ゲームマネージャーのクラスを参照
+        _runnyNoseManager = _runnyNoseManagerObj.GetComponent<RunnyNoseManager>(); 
     }
 
     // Update is called once per frame
     void Update()
     {
-        //スペースが押されたら
+        //鼻水をすすっている状態になったら
         if (_gravityCenterMove.GetSniffling() == true)
         {
-            if (!_runnyNoseManager.GetWinning() && !_runnyNoseManager.GetLosing())
-            {
-                //鼻をかんでいる顔のスプライトに切り替える
-                StartCoroutine("FaceSwitching");
-            }
+            //鼻水をすすっている顔のスプライトに切り替える
+            StartCoroutine("FaceSwitching");    
         }
 
-        if(_runnyNoseManager.GetWinning() == true)
+        ToggleToResultFace();
+    }
+
+    private void ToggleToResultFace()
+    {
+        //勝利時、敗北時に、それぞれの顔画像に切り替える
+        if (_runnyNoseManager.GetWinning() == true)
         {
             _currentSprite.sprite = _winFace;
         }
@@ -51,8 +60,6 @@ public class BoyFaceSwitching : MonoBehaviour
         {
             _currentSprite.sprite = _loseFace;
         }
-
-        //transform.DOShakePosition(1f, 3f, 1, 1, false, false);
     }
 
     /// <summary>
@@ -61,16 +68,20 @@ public class BoyFaceSwitching : MonoBehaviour
     /// <returns></returns>
     IEnumerator FaceSwitching()
     {
-        //鼻をかんでいる顔のスプライトに切り替える
-        _currentSprite.sprite = _blowFace;
+        //ゲーム継続中なら
+        if (!_runnyNoseManager.GetWinning() && !_runnyNoseManager.GetLosing())
+        {
+            //鼻をかんでいる顔のスプライトに切り替える
+            _currentSprite.sprite = _blowFace;
 
-        //0.2秒停止
-        yield return new WaitForSeconds(0.2f);
+            //0.2秒停止
+            yield return new WaitForSeconds(0.1f);
 
-        //元のスプライトに戻す
-        _currentSprite.sprite = _nomalFace;
+            //元のスプライトに戻す
+            _currentSprite.sprite = _nomalFace;
 
-        //鼻をかんでいない状態に戻す
-        _gravityCenterMove.SetSniffling(false);
+            //鼻をかんでいない状態に戻す
+            _gravityCenterMove.SetSniffling(false);
+        }
     }
 }
